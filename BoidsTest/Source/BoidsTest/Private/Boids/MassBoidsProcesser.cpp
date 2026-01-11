@@ -10,14 +10,17 @@ UMassBoidsProcesser::UMassBoidsProcesser()
 {
 	// 실행 순서 결정 - 이동 로직이므로 물리 엔진 전 (or 후)
 	ProcessingPhase = EMassProcessingPhase::PrePhysics;
+}
 
-	// 쿼리 설정을 생성자에서 등록 (5.6 기준?)
-	// 다른 버전이라면 관련 함수가 존재
-	EntityQuery.AddRequirement<FTransformFragment>(EMassFragmentAccess::ReadWrite);
-	EntityQuery.AddRequirement<FMassVelocityFragment>(EMassFragmentAccess::ReadWrite);
+void UMassBoidsProcesser::ConfigureQueries(const TSharedRef<FMassEntityManager>& EntityManager)
+{
+    // 쿼리 설정 등록 (5.6 기준 - 해당 매개변수 처리 필요)
+	// 다른 버전이라면 매개변수 없는 함수 존재
+    EntityQuery.AddRequirement<FTransformFragment>(EMassFragmentAccess::ReadWrite);
+    EntityQuery.AddRequirement<FMassVelocityFragment>(EMassFragmentAccess::ReadWrite);
 
-	// 쿼리 등록
-	EntityQuery.RegisterWithProcessor(*this);
+    // 쿼리 등록
+    EntityQuery.RegisterWithProcessor(*this);
 }
 
 void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecutionContext& Context)
@@ -42,6 +45,10 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
                 // Boids
                 // 예: Velocity += ...;
                 //     Transform.AddToTranslation(Velocity * Context.GetDeltaTime());
+                // 
+                // FVector Acceleration = (SeparationForce + AlignmentForce + CohesionForce);
+                // CurrentVelocity += Acceleration * DeltaTime;
+                // 
             }
         });
 }
