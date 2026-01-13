@@ -33,7 +33,7 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 	// Super가 딱히 의미가 없을듯?
 
 	// Entity 순회하며 로직 순회
-	EntityQuery.ForEachEntityChunk(EntityManager, Context, [this](FMassExecutionContext& Context)
+	EntityQuery.ForEachEntityChunk(Context, [this](FMassExecutionContext& Context)
 		{
 			// 데이터 배열 가져오기 (성능을 위해 청크 단위로)
 			const int32 NumEntities = Context.GetNumEntities();
