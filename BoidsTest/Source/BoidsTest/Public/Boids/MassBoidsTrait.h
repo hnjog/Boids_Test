@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MassEntityTraitBase.h"
-#include "FMassBoidsFragment.h"
+#include "MassBoidsFragment.h"
 #include "MassBoidsTrait.generated.h"
 
 /**
