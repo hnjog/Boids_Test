@@ -15,6 +15,10 @@ class BOIDSTEST_API UMassBoidsTrait : public UMassEntityTraitBase
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(EditAnywhere, Category = "Boids")
+	FMassBoidsFragment BoidsSettings;
+
 protected:
 	// Pure라서 내부 구현해야 함
 	virtual void BuildTemplate(FMassEntityTemplateBuildContext& BuildContext, const UWorld& World) const override;
