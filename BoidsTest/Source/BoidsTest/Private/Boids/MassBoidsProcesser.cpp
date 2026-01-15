@@ -9,6 +9,7 @@
 #include "Boids/BoidsTargetFragment.h"
 
 UMassBoidsProcesser::UMassBoidsProcesser()
+	:EntityQuery(*this)
 {
 	// 실행 순서 결정 - 이동 로직이므로 물리 엔진 전 (or 후)
 	ProcessingPhase = EMassProcessingPhase::PrePhysics;
