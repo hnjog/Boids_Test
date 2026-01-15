@@ -7,6 +7,7 @@
 #include "MassCommonFragments.h"
 #include "Boids/BoidsTargetFragment.h"
 #include "StructUtils/SharedStruct.h"
+#include <MassActorSubsystem.h>
 
 void UMassBoidsTrait::BuildTemplate(FMassEntityTemplateBuildContext& BuildContext, const UWorld& World) const
 {
@@ -14,6 +15,9 @@ void UMassBoidsTrait::BuildTemplate(FMassEntityTemplateBuildContext& BuildContex
 	BuildContext.AddFragment<FTransformFragment>();
 	BuildContext.AddFragment<FMassVelocityFragment>();
 	BuildContext.AddFragment<FBoidsTargetFragment>();
+
+	// Visualization 관련 Fragment 추가
+	BuildContext.AddFragment<FMassActorFragment>();
 
 	// FSharedStruct
 	// - 구조체에서 TSharedPtr 처리하여 사용하고 싶을떄 사용하는 방식
