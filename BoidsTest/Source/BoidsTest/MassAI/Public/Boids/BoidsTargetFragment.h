@@ -15,6 +15,6 @@ struct BOIDSTEST_API FBoidsTargetFragment : public FMassFragment
     GENERATED_BODY()
 
 public:
-    FVector TargetPosition;
-    bool IsTargetChase;
+    FVector TargetPosition = FVector(0.0f, 0.0f, 3000.0f);
+    bool IsTargetChase = true;
 };

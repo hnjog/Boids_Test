@@ -63,11 +63,18 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				FVector Acceleration = FVector::ZeroVector;
 
 				// 타겟이 있으면 그쪽으로 조향
-				//if (TargetInfo.IsTargetChase == true)
-				//{
-				//	FVector DirToTarget = TargetInfo.TargetPosition - CurrentPos; // Offset
-				//	Acceleration += SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings) * Settings.TargetWeight;
-				//}
+				if (TargetInfo.IsTargetChase)
+				{
+					// 타겟 방향 힘 계산
+					FVector SteerForce = SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings);
+					Acceleration += SteerForce * Settings.TargetWeight;
+				}
+				else
+				{
+					// 타겟이 없을 때만 Wander(배회) 작동
+					FVector WanderForce = ComputeWander(Velocity, Settings, DT);
+					Acceleration += WanderForce * Settings.WanderWeight;
+				}
 
 				FVector SepForce = ComputeSeparation(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
 				Acceleration += SepForce * Settings.SeparationWeight;
@@ -79,9 +86,6 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				Acceleration += CohForce * Settings.CohesionWeight;
 
 				// TODO : Avoid
-
-				FVector WanderForce = ComputeWander(Velocity, Settings, DT);
-				Acceleration += WanderForce * Settings.WanderWeight;
 
 				Velocity += Acceleration * DT;
 
