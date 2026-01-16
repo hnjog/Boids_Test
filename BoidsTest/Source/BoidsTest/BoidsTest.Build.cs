@@ -7,13 +7,18 @@ public class BoidsTest : ModuleRules
 	public BoidsTest(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
+
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
+			"AIModule",
+			"StateTreeModule",
+			"GameplayStateTreeModule",
+			"UMG",
+			"Slate",
 
 			// --- Mass AI 필수 모듈 ---
             "MassEntity",       // ECS 코어
@@ -28,14 +33,23 @@ public class BoidsTest : ModuleRules
             
             // AI 관련
             "MassAIBehavior",
-            "StateTreeModule",
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PrivateDependencyModuleNames.AddRange(new string[] { });
+
+		PublicIncludePaths.AddRange(new string[] {
+			"BoidsTest",
+			"BoidsTest/Variant_Horror",
+			"BoidsTest/Variant_Horror/UI",
+			"BoidsTest/Variant_Shooter",
+			"BoidsTest/Variant_Shooter/AI",
+			"BoidsTest/Variant_Shooter/UI",
+			"BoidsTest/Variant_Shooter/Weapons"
+		});
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

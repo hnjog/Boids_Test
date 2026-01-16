@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class BoidsTestEditorTarget : TargetRules
 {
-	public BoidsTestEditorTarget( TargetInfo Target) : base(Target)
+	public BoidsTestEditorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V6;

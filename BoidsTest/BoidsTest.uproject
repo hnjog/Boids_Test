@@ -9,8 +9,9 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"MassEntity",
-				"MassSpawner"
+				"Engine",
+				"AIModule",
+				"UMG"
 			]
 		}
 	],
@@ -21,6 +22,14 @@
 			"TargetAllowList": [
 				"Editor"
 			]
+		},
+		{
+			"Name": "StateTree",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayStateTree",
+			"Enabled": true
 		},
 		{
 			"Name": "MassAI",
@@ -36,10 +45,6 @@
 		},
 		{
 			"Name": "MassGameplay",
-			"Enabled": true
-		},
-		{
-			"Name": "StructUtils",
 			"Enabled": true
 		}
 	]
