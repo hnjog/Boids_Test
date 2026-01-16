@@ -68,6 +68,12 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 					FVector DirToTarget = TargetInfo.TargetPosition - CurrentPos; // Offset
 					Acceleration += SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings) * Settings.TargetWeight;
 				}
+				else
+				{
+					// [테스트용] 타겟 없으면 그냥 X축(앞)으로 달려라!
+					// 이렇게 하면 무조건 움직여야 정상입니다.
+					Acceleration = FVector(1000.0f, 0.0f, 0.0f);
+				}
 
 				// TODO : Boids
 
