@@ -68,12 +68,6 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				//	FVector DirToTarget = TargetInfo.TargetPosition - CurrentPos; // Offset
 				//	Acceleration += SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings) * Settings.TargetWeight;
 				//}
-				//else
-				//{
-				//	// [테스트용] 타겟 없으면 그냥 X축(앞)으로 달려라!
-				//	// 이렇게 하면 무조건 움직여야 정상입니다.
-				//	Acceleration = FVector(1000.0f, 0.0f, 0.0f);
-				//}
 
 				FVector SepForce = ComputeSeparation(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
 				Acceleration += SepForce * Settings.SeparationWeight;
@@ -85,6 +79,9 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				Acceleration += CohForce * Settings.CohesionWeight;
 
 				// TODO : Avoid
+
+				FVector WanderForce = ComputeWander(Velocity, Settings, DT);
+				Acceleration += WanderForce * Settings.WanderWeight;
 
 				Velocity += Acceleration * DT;
 
@@ -210,6 +207,16 @@ FVector UMassBoidsProcesser::ComputeCohesion(const FVector& MyPos, const FVector
 	}
 
 	return FVector::ZeroVector;
+}
+
+FVector UMassBoidsProcesser::ComputeWander(const FVector& MyVel, const FMassBoidsFragment& Settings, float DT) const
+{
+	FVector CircleCenter = MyVel.GetSafeNormal() * Settings.DetectionRadius;
+	FVector RandomPoint = FMath::VRand();
+	FVector DesiredDir = (CircleCenter + (RandomPoint * Settings.WanderJitter)).GetSafeNormal();
+	FVector Steer = (DesiredDir * Settings.MaxMoveSpeed) - MyVel;
+
+	return Steer;
 }
 
 FVector UMassBoidsProcesser::SteerTowards(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const

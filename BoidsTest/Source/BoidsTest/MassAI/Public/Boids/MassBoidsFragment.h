@@ -47,6 +47,15 @@ public:
     // 장애물 CollisionType
     UPROPERTY(EditAnywhere, Category = "Obstacle")
     TEnumAsByte<ECollisionChannel> ObstacleTraceChannel = ECC_WorldStatic;
+
+
+    // 무작위 방향 이동을 위한 변수들
+    UPROPERTY(EditAnywhere, Category = "Wander")
+    float WanderWeight = 3.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Wander")
+    float WanderJitter = 100.0f;
+
 public:
     // Boids 계산에 필요한 파라미터 (설정값)
     UPROPERTY(EditAnywhere)

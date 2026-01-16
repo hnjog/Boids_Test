@@ -33,6 +33,8 @@ private:
     FVector ComputeAlignment(const FVector& MyPos, const FVector& MyVel, int32 MyIndex, TArrayView<FTransformFragment> Transforms, TArrayView<FMassVelocityFragment> Velocities, const FMassBoidsFragment& Settings, int32 NumEntities) const;
     FVector ComputeCohesion(const FVector& MyPos, const FVector& MyVel, int32 MyIndex, TArrayView<FTransformFragment> Transforms, TArrayView<FMassVelocityFragment> Velocities, const FMassBoidsFragment& Settings, int32 NumEntities) const;
     
+    FVector ComputeWander(const FVector& MyVel, const FMassBoidsFragment& Settings, float DT) const;
+
     FVector SteerTowards(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const;
 
 private:
