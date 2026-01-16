@@ -63,19 +63,26 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				FVector Acceleration = FVector::ZeroVector;
 
 				// 타겟이 있으면 그쪽으로 조향
-				if (TargetInfo.IsTargetChase == true)
-				{
-					FVector DirToTarget = TargetInfo.TargetPosition - CurrentPos; // Offset
-					Acceleration += SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings) * Settings.TargetWeight;
-				}
-				else
-				{
-					// [테스트용] 타겟 없으면 그냥 X축(앞)으로 달려라!
-					// 이렇게 하면 무조건 움직여야 정상입니다.
-					Acceleration = FVector(1000.0f, 0.0f, 0.0f);
-				}
+				//if (TargetInfo.IsTargetChase == true)
+				//{
+				//	FVector DirToTarget = TargetInfo.TargetPosition - CurrentPos; // Offset
+				//	Acceleration += SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings) * Settings.TargetWeight;
+				//}
+				//else
+				//{
+				//	// [테스트용] 타겟 없으면 그냥 X축(앞)으로 달려라!
+				//	// 이렇게 하면 무조건 움직여야 정상입니다.
+				//	Acceleration = FVector(1000.0f, 0.0f, 0.0f);
+				//}
 
-				// TODO : Boids
+				FVector SepForce = ComputeSeparation(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
+				Acceleration += SepForce * Settings.SeparationWeight;
+
+				FVector AliForce = ComputeAlignment(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
+				Acceleration += AliForce * Settings.AlignmentWeight;
+
+				FVector CohForce = ComputeCohesion(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
+				Acceleration += CohForce * Settings.CohesionWeight;
 
 				// TODO : Avoid
 
@@ -93,10 +100,116 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				// 진행 방향 바라보기
 				if (Velocity.IsNearlyZero() == false)
 				{
-					Transform.SetRotation(Velocity.ToOrientationQuat());
+					FQuat TargetRotation = Velocity.ToOrientationQuat();
+					FQuat CurrentRotation = Transform.GetRotation();
+					// 회전 속도 임시 : 100
+					Transform.SetRotation(FQuat::Slerp(CurrentRotation, TargetRotation, Settings.RotationSpeed * DT));
 				}
 			}
 		});
+}
+
+FVector UMassBoidsProcesser::ComputeSeparation(const FVector& MyPos, const FVector& MyVel, int32 MyIndex, TArrayView<FTransformFragment> Transforms, TArrayView<FMassVelocityFragment> Velocities, const FMassBoidsFragment& Settings, int32 NumEntities) const
+{
+	FVector Steering = FVector::ZeroVector;
+	int32 Count = 0;
+
+	for (int32 j = 0; j < NumEntities; ++j)
+	{
+		if (MyIndex == j) continue;
+
+		FVector OtherPos = Transforms[j].GetTransform().GetLocation();
+		float DistSq = FVector::DistSquared(MyPos, OtherPos);
+
+		if (DistSq < (Settings.AvoidRadius * Settings.AvoidRadius))
+		{
+			FVector Diff = MyPos - OtherPos;
+			Diff.Normalize();
+			Diff /= FMath::Sqrt(DistSq);
+
+			Steering += Diff;
+			Count++;
+		}
+	}
+
+	if (Count > 0)
+	{
+		Steering /= (float)Count;
+		Steering.Normalize();
+		Steering *= Settings.MaxMoveSpeed;
+		Steering -= MyVel;
+		Steering = Steering.GetClampedToMaxSize(Settings.MaxSteerWeight);
+	}
+
+	return Steering;
+}
+
+FVector UMassBoidsProcesser::ComputeAlignment(const FVector& MyPos, const FVector& MyVel, int32 MyIndex, TArrayView<FTransformFragment> Transforms, TArrayView<FMassVelocityFragment> Velocities, const FMassBoidsFragment& Settings, int32 NumEntities) const
+{
+	FVector AvgVel = FVector::ZeroVector;
+	int32 Count = 0;
+
+	for (int32 j = 0; j < NumEntities; ++j)
+	{
+		if (MyIndex == j) continue;
+
+		FVector OtherPos = Transforms[j].GetTransform().GetLocation();
+		float DistSq = FVector::DistSquared(MyPos, OtherPos);
+
+		if (DistSq < (Settings.DetectionRadius * Settings.DetectionRadius))
+		{
+			AvgVel += Velocities[j].Value;
+			Count++;
+		}
+	}
+
+	if (Count > 0)
+	{
+		AvgVel /= (float)Count;
+		AvgVel.Normalize();
+		AvgVel *= Settings.MaxMoveSpeed;
+
+		FVector Steering = AvgVel - MyVel;
+		Steering = Steering.GetClampedToMaxSize(Settings.MaxSteerWeight);
+		return Steering;
+	}
+
+	return FVector::ZeroVector;
+}
+
+FVector UMassBoidsProcesser::ComputeCohesion(const FVector& MyPos, const FVector& MyVel, int32 MyIndex, TArrayView<FTransformFragment> Transforms, TArrayView<FMassVelocityFragment> Velocities, const FMassBoidsFragment& Settings, int32 NumEntities) const
+{
+	FVector CenterOfMass = FVector::ZeroVector;
+	int32 Count = 0;
+
+	for (int32 j = 0; j < NumEntities; ++j)
+	{
+		if (MyIndex == j) continue;
+
+		FVector OtherPos = Transforms[j].GetTransform().GetLocation();
+		float DistSq = FVector::DistSquared(MyPos, OtherPos);
+
+		if (DistSq < (Settings.DetectionRadius * Settings.DetectionRadius))
+		{
+			CenterOfMass += OtherPos;
+			Count++;
+		}
+	}
+
+	if (Count > 0)
+	{
+		CenterOfMass /= (float)Count;
+
+		FVector DirToCenter = CenterOfMass - MyPos;
+		DirToCenter.Normalize();
+		DirToCenter *= Settings.MaxMoveSpeed;
+
+		FVector Steering = DirToCenter - MyVel;
+		Steering = Steering.GetClampedToMaxSize(Settings.MaxSteerWeight);
+		return Steering;
+	}
+
+	return FVector::ZeroVector;
 }
 
 FVector UMassBoidsProcesser::SteerTowards(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const

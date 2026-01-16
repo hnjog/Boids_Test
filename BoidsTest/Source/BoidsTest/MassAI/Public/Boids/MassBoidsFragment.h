@@ -20,6 +20,9 @@ public:
 
     UPROPERTY(EditAnywhere)
     float MaxMoveSpeed = 500.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    float RotationSpeed = 5.0f;
     
     // 주변 이웃을 감지할 반경
     UPROPERTY(EditAnywhere)
@@ -27,11 +30,11 @@ public:
 
     // 주변 이웃 피하는 반경
     UPROPERTY(EditAnywhere)
-    float AvoidRadius = 50.0f;
+    float AvoidRadius = 150.0f;
 
     // 계산 중, 최댓값에 대한 제한용도
     UPROPERTY(EditAnywhere)
-    float MaxSteerWeight = 3.0f;
+    float MaxSteerWeight = 50.0f;
 
     // 장애물 관련 확인 Dist
     UPROPERTY(EditAnywhere, Category = "Obstacle")
