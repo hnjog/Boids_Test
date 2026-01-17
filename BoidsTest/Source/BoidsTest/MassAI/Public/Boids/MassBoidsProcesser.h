@@ -35,11 +35,7 @@ private:
     
     FVector ComputeWander(const FVector& MyVel, const FMassBoidsFragment& Settings, float DT) const;
 
-    // Coshesion
-    FVector SteerTowardsTarget(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const;
-
-    // Alignment, Separation
-    FVector SteerTowardsVector(const FVector& TargetVector, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const;
+    FVector SteerTowards(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const;
 
 private:
     // 사용할 쿼리 객체
