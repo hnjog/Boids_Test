@@ -65,16 +65,16 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				// 타겟이 있으면 그쪽으로 조향
 				if (TargetInfo.IsTargetChase)
 				{
-					// 타겟 방향 힘 계산
-					FVector SteerForce = SteerTowards(TargetInfo.TargetPosition, CurrentPos, Velocity, Settings);
+					FVector OffsetToTarget = TargetInfo.TargetPosition - CurrentPos;
+					FVector SteerForce = SteerTowards(OffsetToTarget, Velocity, Settings);
 					Acceleration += SteerForce * Settings.TargetWeight;
 				}
-				else
-				{
-					// 타겟이 없을 때만 Wander(배회) 작동
-					FVector WanderForce = ComputeWander(Velocity, Settings, DT);
-					Acceleration += WanderForce * Settings.WanderWeight;
-				}
+				//else
+				//{
+				//	// 타겟이 없을 때만 Wander(배회) 작동
+				//	FVector WanderForce = ComputeWander(Velocity, Settings, DT);
+				//	Acceleration += WanderForce * Settings.WanderWeight;
+				//}
 
 				FVector SepForce = ComputeSeparation(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
 				Acceleration += SepForce * Settings.SeparationWeight;
@@ -103,7 +103,6 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				{
 					FQuat TargetRotation = Velocity.ToOrientationQuat();
 					FQuat CurrentRotation = Transform.GetRotation();
-					// 회전 속도 임시 : 100
 					Transform.SetRotation(FQuat::Slerp(CurrentRotation, TargetRotation, Settings.RotationSpeed * DT));
 				}
 			}
@@ -136,10 +135,7 @@ FVector UMassBoidsProcesser::ComputeSeparation(const FVector& MyPos, const FVect
 	if (Count > 0)
 	{
 		Steering /= (float)Count;
-		Steering.Normalize();
-		Steering *= Settings.MaxMoveSpeed;
-		Steering -= MyVel;
-		Steering = Steering.GetClampedToMaxSize(Settings.MaxSteerWeight);
+		return SteerTowards(Steering, MyVel, Settings);
 	}
 
 	return Steering;
@@ -167,12 +163,8 @@ FVector UMassBoidsProcesser::ComputeAlignment(const FVector& MyPos, const FVecto
 	if (Count > 0)
 	{
 		AvgVel /= (float)Count;
-		AvgVel.Normalize();
-		AvgVel *= Settings.MaxMoveSpeed;
-
-		FVector Steering = AvgVel - MyVel;
-		Steering = Steering.GetClampedToMaxSize(Settings.MaxSteerWeight);
-		return Steering;
+		
+		return SteerTowards(AvgVel, MyVel, Settings);
 	}
 
 	return FVector::ZeroVector;
@@ -201,13 +193,7 @@ FVector UMassBoidsProcesser::ComputeCohesion(const FVector& MyPos, const FVector
 	{
 		CenterOfMass /= (float)Count;
 
-		FVector DirToCenter = CenterOfMass - MyPos;
-		DirToCenter.Normalize();
-		DirToCenter *= Settings.MaxMoveSpeed;
-
-		FVector Steering = DirToCenter - MyVel;
-		Steering = Steering.GetClampedToMaxSize(Settings.MaxSteerWeight);
-		return Steering;
+		return SteerTowards(CenterOfMass - MyPos, MyVel, Settings);
 	}
 
 	return FVector::ZeroVector;
@@ -223,12 +209,9 @@ FVector UMassBoidsProcesser::ComputeWander(const FVector& MyVel, const FMassBoid
 	return Steer;
 }
 
-FVector UMassBoidsProcesser::SteerTowards(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const
+FVector UMassBoidsProcesser::SteerTowards(const FVector& DesiredDirection, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const
 {
-	FVector VectorToTarget = TargetLoc - CurrentLoc;
-	FVector DesiredVelocity = VectorToTarget.GetSafeNormal() * Settings.MaxMoveSpeed;
-
+	FVector DesiredVelocity = DesiredDirection.GetSafeNormal() * Settings.MaxMoveSpeed;
 	FVector Steer = DesiredVelocity - CurrentVel;
-
 	return Steer.GetClampedToMaxSize(Settings.MaxSteerWeight);
 }

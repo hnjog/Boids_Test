@@ -35,7 +35,8 @@ private:
     
     FVector ComputeWander(const FVector& MyVel, const FMassBoidsFragment& Settings, float DT) const;
 
-    FVector SteerTowards(const FVector& TargetLoc, const FVector& CurrentLoc, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const;
+    // 원하는 방향 과 현재 Velocity를 통해 바라볼 방향을 반환
+    FVector SteerTowards(const FVector& DesiredDirection, const FVector& CurrentVel, const FMassBoidsFragment& Settings) const;
 
 private:
     // 사용할 쿼리 객체
