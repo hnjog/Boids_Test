@@ -65,9 +65,7 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				// 타겟이 있으면 그쪽으로 조향
 				if (TargetInfo.IsTargetChase)
 				{
-					FVector OffsetToTarget = TargetInfo.TargetPosition - CurrentPos;
-					FVector SteerForce = SteerTowards(OffsetToTarget, Velocity, Settings);
-					Acceleration += SteerForce * Settings.TargetWeight;
+					Acceleration += ComputeBounds(CurrentPos, Velocity, TargetInfo.TargetPosition, Settings.BoundsRadius, Settings) * Settings.BoundsWeight;
 				}
 
 				FVector SepForce = ComputeSeparation(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
@@ -188,6 +186,19 @@ FVector UMassBoidsProcesser::ComputeCohesion(const FVector& MyPos, const FVector
 		CenterOfMass /= (float)Count;
 
 		return SteerTowards(CenterOfMass - MyPos, MyVel, Settings);
+	}
+
+	return FVector::ZeroVector;
+}
+
+FVector UMassBoidsProcesser::ComputeBounds(const FVector& MyPos, const FVector& MyVel, const FVector& CenterPos, float Radius, const FMassBoidsFragment& Settings) const
+{
+	FVector Offset = CenterPos - MyPos;
+	float Dist = Offset.Size();
+
+	if (Dist > Radius)
+	{
+		return SteerTowards(Offset, MyVel, Settings);
 	}
 
 	return FVector::ZeroVector;

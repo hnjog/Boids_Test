@@ -56,6 +56,14 @@ public:
     UPROPERTY(EditAnywhere, Category = "Wander")
     float WanderJitter = 100.0f;
 
+    // 활동 반경 (이 범위를 벗어나면 돌아옴)
+    UPROPERTY(EditAnywhere, Category = "Boids|Bounds")
+    float BoundsRadius = 1000.0f;
+
+    // 중심으로 돌아오려는 힘의 세기
+    UPROPERTY(EditAnywhere, Category = "Boids|Bounds")
+    float BoundsWeight = 1.0f;
+
 public:
     // Boids 계산에 필요한 파라미터 (설정값)
     UPROPERTY(EditAnywhere)
