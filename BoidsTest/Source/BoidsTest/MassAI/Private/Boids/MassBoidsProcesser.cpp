@@ -77,7 +77,8 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				FVector CohForce = ComputeCohesion(CurrentPos, Velocity, i, Transforms, Velocities, Settings, NumEntities);
 				Acceleration += CohForce * Settings.CohesionWeight;
 
-				// TODO : Avoid
+				FVector AvoidForce = ComputeObstacleAvoidance(CurrentPos, Velocity, Settings, GetWorld());
+				Acceleration += AvoidForce;
 
 				Velocity += Acceleration * DT;
 
@@ -199,6 +200,35 @@ FVector UMassBoidsProcesser::ComputeBounds(const FVector& MyPos, const FVector& 
 	if (Dist > Radius)
 	{
 		return SteerTowards(Offset, MyVel, Settings);
+	}
+
+	return FVector::ZeroVector;
+}
+
+FVector UMassBoidsProcesser::ComputeObstacleAvoidance(const FVector& MyPos, const FVector& MyVel, const FMassBoidsFragment& Settings, const UWorld* World) const
+{
+	if (!World) return FVector::ZeroVector;
+
+	FVector Forward = MyVel.GetSafeNormal();
+	// 속도가 거의 없으면 전방(X)을 기준으로
+	if (Forward.IsNearlyZero()) Forward = FVector::ForwardVector;
+
+	// 감지 거리 (속도가 빠르면 더 멀리 봐야 함)
+	float CheckDistance = Settings.ObstacleCheckDistance;
+
+	FVector Start = MyPos;
+	FVector End = MyPos + (Forward * CheckDistance);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+
+	// WorldStatic (벽, 바닥) 채널과 충돌 검사
+	bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params);
+
+	if (bHit)
+	{
+		FVector AvoidDir = Hit.ImpactNormal;
+		return SteerTowards(AvoidDir, MyVel, Settings) * Settings.ObstacleAvoidanceWeight;
 	}
 
 	return FVector::ZeroVector;
