@@ -74,7 +74,4 @@ public:
 
     UPROPERTY(EditAnywhere)
     float CohesionWeight = 1.0f;
-
-    UPROPERTY(EditAnywhere)
-    float TargetWeight = 1.0f;
 };
