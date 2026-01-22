@@ -107,9 +107,12 @@ FVector UMassBoidsProcesser::ComputeSeparation(const FVector& MyPos, const FVect
 	FVector Steering = FVector::ZeroVector;
 	int32 Count = 0;
 
+	const float Epsilon = 1.0f;
+
 	for (int32 j = 0; j < NumEntities; ++j)
 	{
-		if (MyIndex == j) continue;
+		if (MyIndex == j) 
+			continue;
 
 		FVector OtherPos = Transforms[j].GetTransform().GetLocation();
 		float DistSq = FVector::DistSquared(MyPos, OtherPos);
@@ -117,17 +120,16 @@ FVector UMassBoidsProcesser::ComputeSeparation(const FVector& MyPos, const FVect
 		if (DistSq < (Settings.AvoidRadius * Settings.AvoidRadius))
 		{
 			FVector Diff = MyPos - OtherPos;
-			Diff.Normalize();
-			Diff /= FMath::Sqrt(DistSq);
+			float Scale = 1.0f / (FMath::Max(DistSq, Epsilon));
 
-			Steering += Diff;
+			Steering += Diff.GetSafeNormal() * Scale;
 			Count++;
 		}
 	}
 
 	if (Count > 0)
 	{
-		Steering /= (float)Count;
+		//Steering /= (float)Count;
 		return SteerTowards(Steering, MyVel, Settings);
 	}
 
