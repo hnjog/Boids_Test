@@ -59,13 +59,6 @@ public:
     UPROPERTY(EditAnywhere, Category = "Obstacle")
     float SpiralFactor = 0.5f;
 
-    // 무작위 방향 이동을 위한 변수들
-    UPROPERTY(EditAnywhere, Category = "Wander")
-    float WanderWeight = 3.0f;
-
-    UPROPERTY(EditAnywhere, Category = "Wander")
-    float WanderJitter = 100.0f;
-
     // 활동 반경 (이 범위를 벗어나면 돌아옴)
     UPROPERTY(EditAnywhere, Category = "Boids|Bounds")
     float BoundsRadius = 1000.0f;
