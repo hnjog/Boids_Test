@@ -8,6 +8,9 @@
 #include "MassAI/Public/Boids/MassBoidsFragment.h"
 #include "MassAI/Public/Boids/BoidsTargetFragment.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/Character.h"
+
 UMassBoidsProcesser::UMassBoidsProcesser()
 	:EntityQuery(*this)
 {
@@ -21,7 +24,8 @@ void UMassBoidsProcesser::ConfigureQueries(const TSharedRef<FMassEntityManager>&
 	// 다른 버전이라면 매개변수 없는 함수 존재
 	EntityQuery.AddRequirement<FTransformFragment>(EMassFragmentAccess::ReadWrite);
 	EntityQuery.AddRequirement<FMassVelocityFragment>(EMassFragmentAccess::ReadWrite);
-	EntityQuery.AddRequirement<FBoidsTargetFragment>(EMassFragmentAccess::ReadOnly);
+
+	EntityQuery.AddRequirement<FBoidsTargetFragment>(EMassFragmentAccess::ReadWrite);
 
 	EntityQuery.AddSharedRequirement<FMassBoidsFragment>(EMassFragmentAccess::ReadOnly);
 
@@ -32,9 +36,21 @@ void UMassBoidsProcesser::ConfigureQueries(const TSharedRef<FMassEntityManager>&
 void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecutionContext& Context)
 {
 	// Super가 딱히 의미가 없을듯?
+	FVector PlayerLocation = FVector::ZeroVector;
+	bool bFoundPlayer = false;
+
+	if (UWorld* World = GetWorld())
+	{
+		// 로컬 플레이어 0번 가져오기
+		if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(World, 0))
+		{
+			PlayerLocation = PlayerPawn->GetActorLocation();
+			bFoundPlayer = true;
+		}
+	}
 
 	// Entity 순회하며 로직 순회
-	EntityQuery.ForEachEntityChunk(Context, [this](FMassExecutionContext& Context)
+	EntityQuery.ForEachEntityChunk(Context, [this, PlayerLocation, bFoundPlayer](FMassExecutionContext& Context)
 		{
 			// 데이터 배열 가져오기 (성능을 위해 청크 단위로)
 			const int32 NumEntities = Context.GetNumEntities();
@@ -42,7 +58,7 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 			// 개별 데이터는 배열(ArrayView)로 나옵니다.
 			TArrayView<FTransformFragment> Transforms = Context.GetMutableFragmentView<FTransformFragment>();
 			TArrayView<FMassVelocityFragment> Velocities = Context.GetMutableFragmentView<FMassVelocityFragment>();
-			TConstArrayView<FBoidsTargetFragment> TargetInfos = Context.GetFragmentView<FBoidsTargetFragment>();
+			TArrayView<FBoidsTargetFragment> TargetInfos = Context.GetMutableFragmentView<FBoidsTargetFragment>();
 
 			// 단일 용도로 가져옴 (어차피 다 같은 내용)
 			const FMassBoidsFragment& Settings = Context.GetSharedFragment<FMassBoidsFragment>();
@@ -56,7 +72,17 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				// GetMutableTransform 가 사실 Transform 수정과 동일...
 				FTransform& Transform = Transforms[i].GetMutableTransform();
 				FVector& Velocity = Velocities[i].Value;
-				const FBoidsTargetFragment& TargetInfo = TargetInfos[i];
+				FBoidsTargetFragment& TargetInfo = TargetInfos[i];
+
+				if (bFoundPlayer)
+				{
+					TargetInfo.TargetPosition = PlayerLocation;
+					TargetInfo.IsTargetChase = true;
+				}
+				else
+				{
+					TargetInfo.IsTargetChase = false;
+				}
 
 				FVector CurrentPos = Transform.GetLocation();
 
