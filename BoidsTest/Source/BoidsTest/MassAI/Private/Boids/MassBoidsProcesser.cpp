@@ -78,7 +78,7 @@ void UMassBoidsProcesser::Execute(FMassEntityManager& EntityManager, FMassExecut
 				Acceleration += CohForce * Settings.CohesionWeight;
 
 				FVector AvoidForce = ComputeObstacleAvoidance(CurrentPos, Velocity, Settings, GetWorld());
-				Acceleration += AvoidForce;
+				Acceleration += AvoidForce * Settings.ObstacleAvoidanceWeight;
 
 				Velocity += Acceleration * DT;
 
@@ -211,24 +211,90 @@ FVector UMassBoidsProcesser::ComputeObstacleAvoidance(const FVector& MyPos, cons
 
 	FVector Forward = MyVel.GetSafeNormal();
 	// 속도가 거의 없으면 전방(X)을 기준으로
-	if (Forward.IsNearlyZero()) Forward = FVector::ForwardVector;
+	if (Forward.IsNearlyZero()) 
+		Forward = FVector::ForwardVector;
+
+	FQuat VelocityQuat = Forward.ToOrientationQuat();
 
 	// 감지 거리 (속도가 빠르면 더 멀리 봐야 함)
 	float CheckDistance = Settings.ObstacleCheckDistance;
 
-	FVector Start = MyPos;
-	FVector End = MyPos + (Forward * CheckDistance);
+	FVector TotalAvoidForce = FVector::ZeroVector;
+	int32 HitCount = 0;
 
-	FHitResult Hit;
+	struct RayConfig
+	{
+		FVector Direction;
+		float LengthScale;
+		float WeightMultiplier;
+	};
+
+	const float Angle = Settings.ObstacleAvoidanceDegree;
+
+	int32 TotalRays = Settings.ObstacleAvoidanceLineCount;
+	if (TotalRays < 1) TotalRays = 1; // 최소 1개는 쏴야 함
+
+	TArray<RayConfig> Rays;
+	Rays.Reserve(TotalRays);
+
+	Rays.Add({ FVector::ForwardVector, 1.0f, 2.0f });
+
+	if (TotalRays > 1)
+	{
+		int32 SideRayCount = TotalRays - 1;
+
+		float AngleStep = 360.0f / (float)SideRayCount;
+
+		FVector BaseConeVec = FRotator(Angle, 0, 0).Vector();
+
+		for (int32 i = 0; i < SideRayCount; ++i)
+		{
+			float CurrentRoll = i * AngleStep;
+			FVector RotatedDir = BaseConeVec.RotateAngleAxis(CurrentRoll, FVector::ForwardVector);
+			Rays.Add({ RotatedDir, 0.8f, 1.0f });
+		}
+	}
+
 	FCollisionQueryParams Params;
 
-	// WorldStatic (벽, 바닥) 채널과 충돌 검사
-	bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params);
-
-	if (bHit)
+	for (const RayConfig& Ray : Rays)
 	{
-		FVector AvoidDir = Hit.ImpactNormal;
-		return SteerTowards(AvoidDir, MyVel, Settings) * Settings.ObstacleAvoidanceWeight;
+		// 로컬 방향을 월드 방향으로 변환
+		FVector WorldDir = VelocityQuat.RotateVector(Ray.Direction);
+
+		FVector Start = MyPos;
+		FVector End = MyPos + (WorldDir * (CheckDistance * Ray.LengthScale));
+
+		FHitResult Hit;
+		// WorldStatic(벽) 등과 충돌 검사
+		bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params);
+
+		if (bHit)
+		{
+			FVector AvoidDir = Hit.ImpactNormal;
+
+			float DistRatio = (Hit.Distance / (CheckDistance * Ray.LengthScale));
+			float StrengthByDist = 1.0f - DistRatio;
+
+			TotalAvoidForce += AvoidDir * StrengthByDist * Ray.WeightMultiplier;
+			HitCount++;
+
+#if WITH_EDITOR
+			//DrawDebugLine(World, Start, Hit.ImpactPoint, FColor::Red, false, 0.05f);
+			//DrawDebugLine(World, Hit.ImpactPoint, Hit.ImpactPoint + (AvoidDir * 100.0f), FColor::Green, false, 0.05f);
+#endif
+		}
+		else
+		{
+#if WITH_EDITOR
+			//DrawDebugLine(World, Start, End, FColor::Blue, false, 0.05f);
+#endif
+		}
+	}
+
+	if (HitCount > 0)
+	{
+		return SteerTowards(TotalAvoidForce, MyVel, Settings);
 	}
 
 	return FVector::ZeroVector;

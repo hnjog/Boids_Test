@@ -40,6 +40,14 @@ public:
     UPROPERTY(EditAnywhere, Category = "Obstacle")
     float ObstacleCheckDistance = 500.0f;
 
+    // 장애물 피하는 광선의 개수
+    UPROPERTY(EditAnywhere, Category = "Obstacle")
+    int32 ObstacleAvoidanceLineCount = 5;
+
+    // 장애물 피하는 광선의 각도
+    UPROPERTY(EditAnywhere, Category = "Obstacle")
+    float ObstacleAvoidanceDegree = 30.0f;
+
     // 장애물 피하는 우선순위
     UPROPERTY(EditAnywhere, Category = "Obstacle")
     float ObstacleAvoidanceWeight = 10.0f;
