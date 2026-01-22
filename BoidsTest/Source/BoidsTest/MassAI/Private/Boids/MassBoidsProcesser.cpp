@@ -278,17 +278,6 @@ FVector UMassBoidsProcesser::ComputeObstacleAvoidance(const FVector& MyPos, cons
 
 			TotalAvoidForce += AvoidDir * StrengthByDist * Ray.WeightMultiplier;
 			HitCount++;
-
-#if WITH_EDITOR
-			//DrawDebugLine(World, Start, Hit.ImpactPoint, FColor::Red, false, 0.05f);
-			//DrawDebugLine(World, Hit.ImpactPoint, Hit.ImpactPoint + (AvoidDir * 100.0f), FColor::Green, false, 0.05f);
-#endif
-		}
-		else
-		{
-#if WITH_EDITOR
-			//DrawDebugLine(World, Start, End, FColor::Blue, false, 0.05f);
-#endif
 		}
 	}
 
