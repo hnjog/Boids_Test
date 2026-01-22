@@ -56,6 +56,8 @@ public:
     UPROPERTY(EditAnywhere, Category = "Obstacle")
     TEnumAsByte<ECollisionChannel> ObstacleTraceChannel = ECC_WorldStatic;
 
+    UPROPERTY(EditAnywhere, Category = "Obstacle")
+    float SpiralFactor = 0.5f;
 
     // 무작위 방향 이동을 위한 변수들
     UPROPERTY(EditAnywhere, Category = "Wander")

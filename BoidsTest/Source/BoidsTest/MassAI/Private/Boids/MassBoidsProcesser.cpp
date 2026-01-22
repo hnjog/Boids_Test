@@ -195,11 +195,17 @@ FVector UMassBoidsProcesser::ComputeCohesion(const FVector& MyPos, const FVector
 FVector UMassBoidsProcesser::ComputeBounds(const FVector& MyPos, const FVector& MyVel, const FVector& CenterPos, float Radius, const FMassBoidsFragment& Settings) const
 {
 	FVector Offset = CenterPos - MyPos;
-	float Dist = Offset.Size();
+	float DistSq = Offset.SizeSquared();
+	float RadiusSq = Radius * Radius;
 
-	if (Dist > Radius)
+	if (DistSq > RadiusSq)
 	{
-		return SteerTowards(Offset, MyVel, Settings);
+		FVector PullForce = Offset.GetSafeNormal();
+
+		FVector TangentForce = FVector::CrossProduct(PullForce, FVector::UpVector);
+
+		FVector FinalDir = (PullForce + (TangentForce * Settings.SpiralFactor)).GetSafeNormal();
+		return SteerTowards(FinalDir, MyVel, Settings);
 	}
 
 	return FVector::ZeroVector;
