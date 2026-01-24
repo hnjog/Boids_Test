@@ -33,6 +33,7 @@ public class BoidsTest : ModuleRules
             
             // AI 관련
             "MassAIBehavior",
+            "Niagara",
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
