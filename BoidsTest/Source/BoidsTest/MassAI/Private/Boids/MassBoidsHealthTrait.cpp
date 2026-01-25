@@ -2,7 +2,7 @@
 
 
 #include "MassAI/Public/Boids/MassBoidsHealthTrait.h"
-#include "MassBoidsHealthFragment.h"
+#include "MassAI/Public/Boids/MassBoidsHealthFragment.h"
 #include "MassEntityTemplateRegistry.h"
 
 void UMassBoidsHealthTrait::BuildTemplate(FMassEntityTemplateBuildContext& BuildContext, const UWorld& World) const

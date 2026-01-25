@@ -2,7 +2,7 @@
 
 
 #include "MassAI/Public/Boids/MassBoidsDestructionProcessor.h"
-#include "MassBoidsHealthFragment.h" 
+#include "MassAI/Public/Boids/MassBoidsHealthFragment.h" 
 #include "MassCommonFragments.h"     
 #include "MassExecutionContext.h"
 #include "NiagaraFunctionLibrary.h"
